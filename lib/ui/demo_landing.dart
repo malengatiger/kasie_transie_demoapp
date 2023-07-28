@@ -1,10 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:kasie_transie_demoapp/cluster_helpers/cluster_covers.dart';
 import 'package:kasie_transie_library/bloc/data_api_dog.dart';
 import 'package:kasie_transie_library/data/schemas.dart' as lib;
+import 'package:kasie_transie_library/maps/cluster_maps/cluster_map_controller.dart';
 import 'package:kasie_transie_library/messaging/fcm_bloc.dart';
 import 'package:kasie_transie_library/utils/emojis.dart';
 import 'package:kasie_transie_library/utils/functions.dart';
@@ -12,7 +11,6 @@ import 'package:kasie_transie_library/utils/navigator_utils.dart';
 import 'package:kasie_transie_library/widgets/language_and_color_chooser.dart';
 import 'package:badges/badges.dart' as bd;
 
-import 'cluster_map.dart';
 
 class DemoLanding extends StatefulWidget {
   const DemoLanding({Key? key, required this.association}) : super(key: key);
@@ -199,13 +197,9 @@ class DemoLandingState extends State<DemoLanding>
       busy = false;
     });
   }
-  void _navigateToPassengerCountMap() {
-    var list = <PassengerCountCover>[];
-    for (var pc in passengerCounts) {
-      list.add(PassengerCountCover(latLng: LatLng(pc.position!.coordinates[1],pc.position!.coordinates[0]),
-          passengerCount: pc));
-    }
-    navigateWithScale(ClusterMap(passengerCountCovers: list,), context);
+
+  void _navigateToRouteList() {
+   navigateWithScale(const ClusterMapController(), context);
   }
 
   @override
@@ -232,7 +226,7 @@ class DemoLandingState extends State<DemoLanding>
         ),
         actions: [
           IconButton(onPressed: (){
-            _navigateToPassengerCountMap();
+            _navigateToRouteList();
           }, icon: Icon(Icons.map, color: Theme.of(context).primaryColor,)),
         ],
       ),

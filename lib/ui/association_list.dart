@@ -34,15 +34,16 @@ class AssociationListState extends State<AssociationList>
 
   Future<void> _checkStatus() async {
     final ass = await prefs.getAssociation();
+    await _getData(false);
+
     if (ass != null) {
       if (mounted) {
         _navigateToLanding(ass);
         return;
       }
     }
-    _getData(false);
   }
-  void _getData(bool refresh) async {
+  Future _getData(bool refresh) async {
     pp('$mm  ... getting associations ... ....... ');
     setState(() {
       busy = true;
@@ -66,11 +67,14 @@ class AssociationListState extends State<AssociationList>
     fcmBloc.subscribeForDemoDriver();
 
     if (mounted) {
-      navigateWithScale(
+      await navigateWithScale(
           DemoLanding(
             association: ass,
           ),
           context);
+      setState(() {
+
+      });
     }
   }
 
