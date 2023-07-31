@@ -9,8 +9,10 @@ import 'package:kasie_transie_library/providers/kasie_providers.dart';
 import 'package:kasie_transie_library/utils/device_location_bloc.dart';
 import 'package:kasie_transie_library/utils/emojis.dart';
 import 'package:kasie_transie_library/utils/functions.dart';
+import 'package:kasie_transie_library/utils/navigator_utils.dart';
 import 'package:kasie_transie_library/utils/prefs.dart';
 import 'package:kasie_transie_library/widgets/route_widgets/live_widget.dart';
+import 'package:kasie_transie_library/maps/cluster_maps/live_cluster_map.dart';
 
 class RouteManager extends StatefulWidget {
   const RouteManager({
@@ -56,9 +58,11 @@ class _RouteManagerState extends State<RouteManager> {
   }
 
   late Timer timer;
+  bool restart = false;
 
   void _handleRoute() async {
     pp('$mm ... start generation for route: ${route!.name}');
+    restart = true;
     _startGeneration();
 
   }
@@ -87,7 +91,7 @@ class _RouteManagerState extends State<RouteManager> {
       busy = true;
     });
     try {
-      await dataApiDog.generateRouteDispatchRecords(route!.routeId!, 5, 10);
+      await dataApiDog.generateRouteDispatchRecords(route!.routeId!, 10, 8);
       _showSuccess('Dispatch record generation requests completed');
     } catch (e) {
       pp(e);
@@ -98,36 +102,13 @@ class _RouteManagerState extends State<RouteManager> {
     });
   }
 
-  void _showError(e) {
-    pp('$mm ... error happened, mounted? $mounted ');
-    if (mounted) {
-      showSnackBar(
-          backgroundColor: Colors.red.shade800,
-          textStyle: const TextStyle(color: Colors.white),
-          message: '$e',
-          duration: const Duration(milliseconds: 10000),
-          context: context);
-    }
-  }
-
-  void _showSuccess(String e) {
-    if (mounted) {
-      showSnackBar(
-          backgroundColor: Colors.teal.shade800,
-          textStyle: const TextStyle(color: Colors.white),
-          message: e,
-          duration: const Duration(milliseconds: 2000),
-          context: context);
-    }
-  }
-
   void _generateCommuterRequests() async {
     pp('$mm ... _generateCommuterRequests ');
     setState(() {
       busy = true;
     });
     try {
-      await dataApiDog.generateRouteCommuterRequests(route!.routeId!, 200, 5);
+      await dataApiDog.generateRouteCommuterRequests(route!.routeId!, 300, 4);
       _showSuccess('Commuter requests completed!');
     } catch (e) {
       pp(e);
@@ -137,7 +118,9 @@ class _RouteManagerState extends State<RouteManager> {
       busy = false;
     });
   }
-
+void _navigateToMap() {
+    navigateWithScale(const LiveClusterMap(), context);
+}
   @override
   Widget build(BuildContext context) {
     var height = 800.0, width = 400.0;
@@ -148,7 +131,7 @@ class _RouteManagerState extends State<RouteManager> {
     return SafeArea(
         child: Scaffold(
       appBar: AppBar(
-        title: const Text('Route Demo Manager'),
+        title: const Text('Route Monitor'),
         bottom: PreferredSize(preferredSize: const Size.fromHeight(60), child: Column(
           children: [
             RouteDropDown(
@@ -161,6 +144,11 @@ class _RouteManagerState extends State<RouteManager> {
                 }),
           ],
         )),
+        actions: [
+          IconButton(onPressed: (){
+            _navigateToMap();
+          }, icon: Icon(Icons.map, color: Theme.of(context).primaryColor)),
+        ],
       ),
       body: Stack(
         children: [
@@ -187,7 +175,7 @@ class _RouteManagerState extends State<RouteManager> {
                 Expanded(
                   child: LiveOperations(
                     height: height,
-                    width: width,
+                    width: width, restart: restart,
                     elevation: 8.0,
                   ),
                 ),
@@ -211,4 +199,28 @@ class _RouteManagerState extends State<RouteManager> {
       ),
     ));
   }
+
+  void _showError(e) {
+    pp('$mm ... error happened, mounted? $mounted ');
+    if (mounted) {
+      showSnackBar(
+          backgroundColor: Colors.red.shade800,
+          textStyle: const TextStyle(color: Colors.white),
+          message: '$e',
+          duration: const Duration(milliseconds: 10000),
+          context: context);
+    }
+  }
+
+  void _showSuccess(String e) {
+    if (mounted) {
+      showSnackBar(
+          backgroundColor: Colors.teal.shade800,
+          textStyle: const TextStyle(color: Colors.white),
+          message: e,
+          duration: const Duration(milliseconds: 2000),
+          context: context);
+    }
+  }
+
 }
