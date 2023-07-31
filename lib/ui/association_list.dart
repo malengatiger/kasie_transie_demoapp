@@ -8,6 +8,7 @@ import 'package:kasie_transie_library/utils/functions.dart';
 import 'package:kasie_transie_library/utils/navigator_utils.dart';
 import 'package:kasie_transie_library/utils/prefs.dart';
 import 'package:kasie_transie_library/widgets/language_and_color_chooser.dart';
+import 'package:responsive_builder/responsive_builder.dart';
 
 import 'demo_landing.dart';
 
@@ -25,6 +26,7 @@ class AssociationListState extends State<AssociationList>
   final mm = '🍐🍐🍐🍐AssociationList 🍐🍐';
   var assocList = <lm.Association>[];
   bool busy = false;
+
   @override
   void initState() {
     _controller = AnimationController(vsync: this);
@@ -32,17 +34,20 @@ class AssociationListState extends State<AssociationList>
     _checkStatus();
   }
 
+  lib.Association? association;
+
   Future<void> _checkStatus() async {
-    final ass = await prefs.getAssociation();
+    association = await prefs.getAssociation();
     await _getData(false);
 
-    if (ass != null) {
+    if (association != null) {
       if (mounted) {
-        _navigateToLanding(ass);
+        _navigateToLanding(association!);
         return;
       }
     }
   }
+
   Future _getData(bool refresh) async {
     pp('$mm  ... getting associations ... ....... ');
     setState(() {
@@ -64,17 +69,13 @@ class AssociationListState extends State<AssociationList>
   void _navigateToLanding(lib.Association ass) async {
     await prefs.saveAssociation(ass);
     await prefs.saveDemoFlag(true);
-    fcmBloc.subscribeForDemoDriver();
-
-    if (mounted) {
-      await navigateWithScale(
-          DemoLanding(
-            association: ass,
-          ),
-          context);
-      setState(() {
-
-      });
+    fcmBloc.subscribeForDemoDriver('DemoDriver');
+    final type = getThisDeviceType();
+    if (type == 'phone') {
+      if (mounted) {
+        await navigateWithScale(DemoLanding(association: ass), context);
+        setState(() {});
+      }
     }
   }
 
@@ -86,76 +87,240 @@ class AssociationListState extends State<AssociationList>
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
     return SafeArea(
-        child: Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Associations for Demo',
-          style: myTextStyleLarge(context),
-        ),
-        actions: [
-          IconButton(onPressed: (){
-            navigateWithScale(LanguageAndColorChooser(onLanguageChosen: (){}), context);
-          }, icon: Icon(Icons.color_lens,
-            color: Theme.of(context).primaryColor,))
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Card(
-          shape: getRoundedBorder(radius: 16),
-          child: Column(
-            children: [
-              const SizedBox(
-                height: 48,
-              ),
-              const Text('Select the Association for the Demo'),
-              const SizedBox(
-                height: 48,
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: ListView.builder(
-                      itemCount: assocList.length,
-                      itemBuilder: (ctx, index) {
-                        final ass = assocList.elementAt(index);
-                        return GestureDetector(
-                          onTap: () {
-                            _navigateToLanding(ass);
-                          },
-                          child: Card(
-                            shape: getRoundedBorder(radius: 16),
-                            elevation: 4,
-                            child: ListTile(
-                              title: Text(
-                                '${ass.associationName}',
-                                style: myTextStyleMediumLargeWithColor(context, Theme.of(context).primaryColor, 14),
-                              ),
-                              subtitle: ass.cityName == null
-                                  ? const SizedBox()
-                                  : Padding(
-                                      padding:
-                                          const EdgeInsets.only(top: 8.0),
-                                      child: Text(
-                                        ass.cityName!,
-                                        style: myTextStyleTiny(context),
-                                      ),
-                                    ),
-                              leading: Icon(
-                                Icons.back_hand,
-                                color: Theme.of(context).primaryColor,
-                              ),
-                            ),
-                          ),
-                        );
-                      }),
-                ),
-              )
-            ],
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            'Associations for Demo',
           ),
+          actions: [
+            IconButton(
+                onPressed: () {
+                  navigateWithScale(
+                      LanguageAndColorChooser(onLanguageChosen: () {}),
+                      context);
+                },
+                icon: Icon(
+                  Icons.color_lens,
+                  color: Theme.of(context).primaryColor,
+                ))
+          ],
         ),
+        body: ScreenTypeLayout.builder(mobile: (ctx) {
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Card(
+              shape: getRoundedBorder(radius: 16),
+              child: Column(
+                children: [
+                  const SizedBox(
+                    height: 48,
+                  ),
+                  const Text('Select the Association for the Demo'),
+                  const SizedBox(
+                    height: 48,
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: ListView.builder(
+                          itemCount: assocList.length,
+                          itemBuilder: (ctx, index) {
+                            final ass = assocList.elementAt(index);
+                            return GestureDetector(
+                              onTap: () {
+                                _navigateToLanding(ass);
+                              },
+                              child: Card(
+                                shape: getRoundedBorder(radius: 16),
+                                elevation: 4,
+                                child: ListTile(
+                                  title: Text(
+                                    '${ass.associationName}',
+                                    style: myTextStyleMediumLargeWithColor(
+                                        context,
+                                        Theme.of(context).primaryColor,
+                                        14),
+                                  ),
+                                  subtitle: ass.cityName == null
+                                      ? const SizedBox()
+                                      : Padding(
+                                          padding:
+                                              const EdgeInsets.only(top: 8.0),
+                                          child: Text(
+                                            ass.cityName!,
+                                            style: myTextStyleTiny(context),
+                                          ),
+                                        ),
+                                  leading: Icon(
+                                    Icons.back_hand,
+                                    color: Theme.of(context).primaryColor,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }),
+                    ),
+                  )
+                ],
+              ),
+            ),
+          );
+        }, tablet: (ctx) {
+          return OrientationLayoutBuilder(
+            portrait: (ctx) {
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: (width / 2) - 40,
+                    child: Card(
+                      shape: getRoundedBorder(radius: 16),
+                      child: Column(
+                        children: [
+                          const SizedBox(
+                            height: 48,
+                          ),
+                          const Text('Select the Association for the Demo'),
+                          const SizedBox(
+                            height: 48,
+                          ),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: ListView.builder(
+                                  itemCount: assocList.length,
+                                  itemBuilder: (ctx, index) {
+                                    final ass = assocList.elementAt(index);
+                                    return GestureDetector(
+                                      onTap: () {
+                                        _navigateToLanding(ass);
+                                      },
+                                      child: Card(
+                                        shape: getRoundedBorder(radius: 16),
+                                        elevation: 4,
+                                        child: ListTile(
+                                          title: Text(
+                                            '${ass.associationName}',
+                                            style: myTextStyleSmall(
+                                              context,
+                                            ),
+                                          ),
+                                          subtitle: ass.cityName == null
+                                              ? const SizedBox()
+                                              : Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          top: 8.0),
+                                                  child: Text(
+                                                    ass.cityName!,
+                                                    style: myTextStyleTiny(
+                                                        context),
+                                                  ),
+                                                ),
+                                          leading: Icon(
+                                            Icons.back_hand,
+                                            color:
+                                                Theme.of(context).primaryColor,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }),
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                      width: (width / 2) + 40,
+                      child: association == null
+                          ? const SizedBox()
+                          : DemoLanding(association: association!))
+                ],
+              );
+            },
+            landscape: (ctx) {
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: (width / 2),
+                    child: Card(
+                      shape: getRoundedBorder(radius: 16),
+                      child: Column(
+                        children: [
+                          const SizedBox(
+                            height: 48,
+                          ),
+                          const Text('Select the Association for the Demo'),
+                          const SizedBox(
+                            height: 48,
+                          ),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: ListView.builder(
+                                  itemCount: assocList.length,
+                                  itemBuilder: (ctx, index) {
+                                    final ass = assocList.elementAt(index);
+                                    return GestureDetector(
+                                      onTap: () {
+                                        _navigateToLanding(ass);
+                                      },
+                                      child: Card(
+                                        shape: getRoundedBorder(radius: 16),
+                                        elevation: 4,
+                                        child: ListTile(
+                                          title: Text(
+                                            '${ass.associationName}',
+                                            style:
+                                                myTextStyleMediumLargeWithColor(
+                                                    context,
+                                                    Theme.of(context)
+                                                        .primaryColor,
+                                                    14),
+                                          ),
+                                          subtitle: ass.cityName == null
+                                              ? const SizedBox()
+                                              : Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          top: 8.0),
+                                                  child: Text(
+                                                    ass.cityName!,
+                                                    style: myTextStyleTiny(
+                                                        context),
+                                                  ),
+                                                ),
+                                          leading: Icon(
+                                            Icons.back_hand,
+                                            color:
+                                                Theme.of(context).primaryColor,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }),
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                      width: (width / 2),
+                      child: association == null
+                          ? const SizedBox()
+                          : DemoLanding(association: association!))
+                ],
+              );
+            },
+          );
+        }),
       ),
-    ));
+    );
   }
 }

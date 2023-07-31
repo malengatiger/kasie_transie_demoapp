@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:kasie_transie_demoapp/ui/route_manager.dart';
 import 'package:kasie_transie_library/bloc/data_api_dog.dart';
 import 'package:kasie_transie_library/data/schemas.dart' as lib;
 import 'package:kasie_transie_library/maps/cluster_maps/cluster_map_controller.dart';
@@ -10,7 +11,6 @@ import 'package:kasie_transie_library/utils/functions.dart';
 import 'package:kasie_transie_library/utils/navigator_utils.dart';
 import 'package:kasie_transie_library/widgets/language_and_color_chooser.dart';
 import 'package:badges/badges.dart' as bd;
-
 
 class DemoLanding extends StatefulWidget {
   const DemoLanding({Key? key, required this.association}) : super(key: key);
@@ -24,7 +24,8 @@ class DemoLanding extends StatefulWidget {
 class DemoLandingState extends State<DemoLanding>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  final mm = '${E.leaf2}${E.leaf2}${E.leaf2}${E.leaf2}${E.leaf2}${E.leaf2} DemoLanding: '
+  final mm =
+      '${E.leaf2}${E.leaf2}${E.leaf2}${E.leaf2}${E.leaf2}${E.leaf2} DemoLanding: '
       '${E.leaf2}${E.leaf2}${E.leaf2}';
 
   var dispatches = <lib.DispatchRecord>[];
@@ -38,7 +39,6 @@ class DemoLandingState extends State<DemoLanding>
   late StreamSubscription<lib.CommuterRequest> requestSub;
   late StreamSubscription<lib.VehicleHeartbeat> heartbeatSub;
   late StreamSubscription<lib.VehicleArrival> arrivalsSub;
-
 
   bool busy = false;
 
@@ -199,9 +199,12 @@ class DemoLandingState extends State<DemoLanding>
   }
 
   void _navigateToRouteList() {
-   navigateWithScale(const ClusterMapController(), context);
+    navigateWithScale(const ClusterMapController(), context);
   }
 
+  void _navigateToRouteManager() {
+    navigateWithScale( RouteManager(association: widget.association,), context);
+  }
   @override
   void dispose() {
     _controller.dispose();
@@ -216,6 +219,7 @@ class DemoLandingState extends State<DemoLanding>
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
+    final type = getThisDeviceType();
     return SafeArea(
         child: Scaffold(
       appBar: AppBar(
@@ -225,9 +229,22 @@ class DemoLandingState extends State<DemoLanding>
               context, Theme.of(context).primaryColor, 14),
         ),
         actions: [
-          IconButton(onPressed: (){
-            _navigateToRouteList();
-          }, icon: Icon(Icons.map, color: Theme.of(context).primaryColor,)),
+          IconButton(
+              onPressed: () {
+                _navigateToRouteList();
+              },
+              icon: Icon(
+                Icons.map,
+                color: Theme.of(context).primaryColor,
+              )),
+          IconButton(
+              onPressed: () {
+                _navigateToRouteManager();
+              },
+              icon: Icon(
+                Icons.roundabout_right,
+                color: Theme.of(context).primaryColor,
+              )),
         ],
       ),
       body: Stack(
@@ -253,7 +270,7 @@ class DemoLandingState extends State<DemoLanding>
                       child: Text(
                         'KT Demo Driver',
                         style: myTextStyleMediumLargeWithColor(
-                            context, Theme.of(context).primaryColorLight, 32),
+                            context, Theme.of(context).primaryColorLight, 28),
                       ),
                     ),
                     const SizedBox(
@@ -271,7 +288,7 @@ class DemoLandingState extends State<DemoLanding>
                       height: 36,
                     ),
                     SizedBox(
-                      width: 300,
+                      width: type == 'phone' ? 280 : 360,
                       child: Card(
                         shape: getRoundedBorder(radius: 8),
                         elevation: 8,
@@ -289,9 +306,14 @@ class DemoLandingState extends State<DemoLanding>
                               onPressed: () {
                                 _generateDispatchRecords();
                               },
-                              child: const Padding(
-                                padding: EdgeInsets.all(16.0),
-                                child: Text('Generate Dispatch Records'),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Text(
+                                  'Generate Dispatch Records',
+                                  style: type == 'phone'
+                                      ? myTextStyleSmall(context)
+                                      : myTextStyleMedium(context),
+                                ),
                               )),
                         ),
                       ),
@@ -300,7 +322,7 @@ class DemoLandingState extends State<DemoLanding>
                       height: 12,
                     ),
                     SizedBox(
-                      width: 300,
+                      width: type == 'phone' ? 280 : 360,
                       child: Card(
                         shape: getRoundedBorder(radius: 8),
                         elevation: 8,
@@ -318,9 +340,14 @@ class DemoLandingState extends State<DemoLanding>
                               onPressed: () {
                                 _generateHeartbeats();
                               },
-                              child: const Padding(
-                                padding: EdgeInsets.all(16.0),
-                                child: Text('Generate Vehicle Heartbeats'),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Text(
+                                  'Generate Vehicle Heartbeats',
+                                  style: type == 'phone'
+                                      ? myTextStyleSmall(context)
+                                      : myTextStyleMedium(context),
+                                ),
                               )),
                         ),
                       ),
@@ -329,7 +356,7 @@ class DemoLandingState extends State<DemoLanding>
                       height: 12,
                     ),
                     SizedBox(
-                      width: 300,
+                      width: type == 'phone' ? 280 : 360,
                       child: Card(
                         shape: getRoundedBorder(radius: 8),
                         elevation: 8,
@@ -349,9 +376,14 @@ class DemoLandingState extends State<DemoLanding>
                                 onPressed: () {
                                   _generatePassengerCounts();
                                 },
-                                child: const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Text('Generate Passenger Counts'),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(
+                                    'Generate Passenger Counts',
+                                    style: type == 'phone'
+                                        ? myTextStyleSmall(context)
+                                        : myTextStyleMedium(context),
+                                  ),
                                 )),
                           ),
                         ),
@@ -361,7 +393,7 @@ class DemoLandingState extends State<DemoLanding>
                       height: 12,
                     ),
                     SizedBox(
-                      width: 300,
+                      width: type == 'phone' ? 280 : 360,
                       child: Card(
                         shape: getRoundedBorder(radius: 8),
                         elevation: 8,
@@ -381,9 +413,14 @@ class DemoLandingState extends State<DemoLanding>
                                 onPressed: () {
                                   _generateCommuterRequests();
                                 },
-                                child: const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Text('Generate Commuter Requests'),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(
+                                    'Generate Commuter Requests',
+                                    style: type == 'phone'
+                                        ? myTextStyleSmall(context)
+                                        : myTextStyleMedium(context),
+                                  ),
                                 )),
                           ),
                         ),
@@ -393,7 +430,7 @@ class DemoLandingState extends State<DemoLanding>
                       height: 12,
                     ),
                     SizedBox(
-                      width: 300,
+                      width: type == 'phone' ? 280 : 360,
                       child: Card(
                         shape: getRoundedBorder(radius: 8),
                         elevation: 8,
@@ -410,11 +447,15 @@ class DemoLandingState extends State<DemoLanding>
                               padding: const EdgeInsets.all(8),
                             ),
                             child: TextButton(
-                                onPressed: () {
-                                },
-                                child: const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Text('Accept Vehicle Arrivals'),
+                                onPressed: () {},
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(
+                                    'Accept Vehicle Arrivals',
+                                    style: type == 'phone'
+                                        ? myTextStyleSmall(context)
+                                        : myTextStyleMedium(context),
+                                  ),
                                 )),
                           ),
                         ),
