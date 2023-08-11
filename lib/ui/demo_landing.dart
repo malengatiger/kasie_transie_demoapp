@@ -1,7 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:kasie_transie_demoapp/ui/route_manager.dart';
+import 'package:kasie_transie_demoapp/ui/vehicle_list.dart';
+import 'package:kasie_transie_library/bloc/list_api_dog.dart';
+import 'package:kasie_transie_library/maps/association_route_maps.dart';
+import 'package:kasie_transie_library/providers/kasie_providers.dart';
+import 'package:kasie_transie_library/widgets/route_widgets/route_manager.dart';
 import 'package:kasie_transie_library/bloc/data_api_dog.dart';
 import 'package:kasie_transie_library/data/schemas.dart' as lib;
 import 'package:kasie_transie_library/maps/cluster_maps/cluster_map_controller.dart';
@@ -11,6 +15,7 @@ import 'package:kasie_transie_library/utils/functions.dart';
 import 'package:kasie_transie_library/utils/navigator_utils.dart';
 import 'package:kasie_transie_library/widgets/language_and_color_chooser.dart';
 import 'package:badges/badges.dart' as bd;
+import 'package:kasie_transie_library/widgets/vehicle_widgets/car_list.dart';
 
 class DemoLanding extends StatefulWidget {
   const DemoLanding({Key? key, required this.association}) : super(key: key);
@@ -32,21 +37,25 @@ class DemoLandingState extends State<DemoLanding>
   var requests = <lib.CommuterRequest>[];
   var heartbeats = <lib.VehicleHeartbeat>[];
   var arrivals = <lib.VehicleArrival>[];
-
+  var departures = <lib.VehicleDeparture>[];
   var passengerCounts = <lib.AmbassadorPassengerCount>[];
+  //
   late StreamSubscription<lib.AmbassadorPassengerCount> passengerSub;
   late StreamSubscription<lib.DispatchRecord> dispatchSub;
   late StreamSubscription<lib.CommuterRequest> requestSub;
   late StreamSubscription<lib.VehicleHeartbeat> heartbeatSub;
   late StreamSubscription<lib.VehicleArrival> arrivalsSub;
+  late StreamSubscription<lib.VehicleDeparture> departureSub;
 
   bool busy = false;
-
+  var routes = <lib.Route>[];
+  lib.Route? route;
   @override
   void initState() {
     _controller = AnimationController(vsync: this);
     super.initState();
     _listen();
+    _getRoutes();
   }
 
   void _listen() async {
@@ -57,6 +66,15 @@ class DemoLandingState extends State<DemoLanding>
           '${event.vehicleReg} at ${event.landmarkName} ${E.blueDot} date: ${event.created}');
       // myPrettyJsonPrint(event.toJson());
       arrivals.add(event);
+      if (mounted) {
+        setState(() {});
+      }
+    });
+    departureSub = fcmBloc.vehicleDepartureStream.listen((event) {
+      pp('$mm ... vehicleDepartureStream delivered a departure \t${E.appleRed} '
+          '${event.vehicleReg} at ${event.landmarkName} ${E.blueDot} date: ${event.created}');
+      // myPrettyJsonPrint(event.toJson());
+      departures.add(event);
       if (mounted) {
         setState(() {});
       }
@@ -100,6 +118,19 @@ class DemoLandingState extends State<DemoLanding>
       if (mounted) {
         setState(() {});
       }
+    });
+  }
+
+  void _getRoutes() async {
+    pp('$mm ... get routes for ${widget.association.associationName}');
+    setState(() {
+      busy = true;
+    });
+    routes = await listApiDog.getRoutes(AssociationParameter(widget.association.associationId!, false));
+    pp('$mm ... routes found: ${routes.length}');
+
+    setState(() {
+      busy = false;
     });
   }
 
@@ -186,7 +217,7 @@ class DemoLandingState extends State<DemoLanding>
     });
     try {
       dataApiDog.generateCommuterRequests(
-          widget.association.associationId!, 80, 1);
+          widget.association.associationId!, 200, 5);
       pp('$mm ... _generateCommuterRequests done: ${requests.length}');
       _showSuccess('Commuter requests generation jumping!');
     } catch (e) {
@@ -205,6 +236,7 @@ class DemoLandingState extends State<DemoLanding>
   void _navigateToRouteManager() {
     navigateWithScale( RouteManager(association: widget.association,), context);
   }
+
   @override
   void dispose() {
     _controller.dispose();
@@ -245,6 +277,7 @@ class DemoLandingState extends State<DemoLanding>
                 Icons.roundabout_right,
                 color: Theme.of(context).primaryColor,
               )),
+
         ],
       ),
       body: Stack(
@@ -256,130 +289,65 @@ class DemoLandingState extends State<DemoLanding>
               child: Card(
                 shape: getRoundedBorder(radius: 16),
                 elevation: 4,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        navigateWithScale(
-                            LanguageAndColorChooser(
-                              onLanguageChosen: () {},
-                            ),
-                            context);
-                      },
-                      child: Text(
-                        'KT Demo Driver',
-                        style: myTextStyleMediumLargeWithColor(
-                            context, Theme.of(context).primaryColorLight, 28),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 8,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Text(
-                        'Generate data to make demos more interactive and to enable the '
-                        'display of the collaboration between all the personnel and vehicles ',
-                        style: myTextStyleSmall(context),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 36,
-                    ),
-                    SizedBox(
-                      width: type == 'phone' ? 280 : 360,
-                      child: Card(
-                        shape: getRoundedBorder(radius: 8),
-                        elevation: 8,
-                        child: bd.Badge(
-                          badgeContent: Text(
-                            '${dispatches.length}',
-                            style: myTextStyleTiny(context),
-                          ),
-                          badgeStyle: bd.BadgeStyle(
-                            elevation: 12,
-                            badgeColor: Colors.deepOrange.shade600,
-                            padding: const EdgeInsets.all(8),
-                          ),
-                          child: TextButton(
-                              onPressed: () {
-                                _generateDispatchRecords();
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Text(
-                                  'Generate Dispatch Records',
-                                  style: type == 'phone'
-                                      ? myTextStyleSmall(context)
-                                      : myTextStyleMedium(context),
-                                ),
-                              )),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          navigateWithScale(
+                              LanguageAndColorChooser(
+                                onLanguageChosen: () {},
+                              ),
+                              context);
+                        },
+                        child: Text(
+                          'KT Demo Driver',
+                          style: myTextStyleMediumLargeWithColor(
+                              context, Theme.of(context).primaryColorLight, 28),
                         ),
                       ),
-                    ),
-                    const SizedBox(
-                      height: 12,
-                    ),
-                    SizedBox(
-                      width: type == 'phone' ? 280 : 360,
-                      child: Card(
-                        shape: getRoundedBorder(radius: 8),
-                        elevation: 8,
-                        child: bd.Badge(
-                          badgeContent: Text(
-                            '${heartbeats.length}',
-                            style: myTextStyleTiny(context),
-                          ),
-                          badgeStyle: bd.BadgeStyle(
-                            elevation: 12,
-                            badgeColor: Colors.teal.shade800,
-                            padding: const EdgeInsets.all(8),
-                          ),
-                          child: TextButton(
-                              onPressed: () {
-                                _generateHeartbeats();
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Text(
-                                  'Generate Vehicle Heartbeats',
-                                  style: type == 'phone'
-                                      ? myTextStyleSmall(context)
-                                      : myTextStyleMedium(context),
-                                ),
-                              )),
+                      const SizedBox(
+                        height: 8,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text(
+                          'Generate data to make demos more interactive and to enable the '
+                          'display of the collaboration between all the personnel and vehicles ',
+                          style: myTextStyleSmall(context),
                         ),
                       ),
-                    ),
-                    const SizedBox(
-                      height: 12,
-                    ),
-                    SizedBox(
-                      width: type == 'phone' ? 280 : 360,
-                      child: Card(
-                        shape: getRoundedBorder(radius: 8),
-                        elevation: 8,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
+                      RouteDropDown(routes: routes, onRoutePicked: (rt ) {
+                        pp('$mm navigate to cars for route: ${rt.name}');
+                        navigateWithScale(VehicleListForDemo(route: rt), context);
+                      },),
+                      const SizedBox(
+                        height: 36,
+                      ),
+                      SizedBox(
+                        width: type == 'phone' ? 280 : 360,
+                        child: Card(
+                          shape: getRoundedBorder(radius: 8),
+                          elevation: 8,
                           child: bd.Badge(
                             badgeContent: Text(
-                              '${passengerCounts.length}',
+                              '${dispatches.length}',
                               style: myTextStyleTiny(context),
                             ),
                             badgeStyle: bd.BadgeStyle(
                               elevation: 12,
-                              badgeColor: Colors.pink.shade800,
+                              badgeColor: Colors.deepOrange.shade600,
                               padding: const EdgeInsets.all(8),
                             ),
                             child: TextButton(
                                 onPressed: () {
-                                  _generatePassengerCounts();
+                                  _generateDispatchRecords();
                                 },
                                 child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
+                                  padding: const EdgeInsets.all(16.0),
                                   child: Text(
-                                    'Generate Passenger Counts',
+                                    'Generate Dispatch Records',
                                     style: type == 'phone'
                                         ? myTextStyleSmall(context)
                                         : myTextStyleMedium(context),
@@ -388,35 +356,32 @@ class DemoLandingState extends State<DemoLanding>
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(
-                      height: 12,
-                    ),
-                    SizedBox(
-                      width: type == 'phone' ? 280 : 360,
-                      child: Card(
-                        shape: getRoundedBorder(radius: 8),
-                        elevation: 8,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
+                      const SizedBox(
+                        height: 12,
+                      ),
+                      SizedBox(
+                        width: type == 'phone' ? 280 : 360,
+                        child: Card(
+                          shape: getRoundedBorder(radius: 8),
+                          elevation: 4,
                           child: bd.Badge(
                             badgeContent: Text(
-                              '${requests.length}',
+                              '${heartbeats.length}',
                               style: myTextStyleTiny(context),
                             ),
                             badgeStyle: bd.BadgeStyle(
                               elevation: 12,
-                              badgeColor: Colors.blue.shade800,
+                              badgeColor: Colors.teal.shade800,
                               padding: const EdgeInsets.all(8),
                             ),
                             child: TextButton(
                                 onPressed: () {
-                                  _generateCommuterRequests();
+                                  _generateHeartbeats();
                                 },
                                 child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
+                                  padding: const EdgeInsets.all(16.0),
                                   child: Text(
-                                    'Generate Commuter Requests',
+                                    'Vehicle Heartbeats',
                                     style: type == 'phone'
                                         ? myTextStyleSmall(context)
                                         : myTextStyleMedium(context),
@@ -425,43 +390,149 @@ class DemoLandingState extends State<DemoLanding>
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(
-                      height: 12,
-                    ),
-                    SizedBox(
-                      width: type == 'phone' ? 280 : 360,
-                      child: Card(
-                        shape: getRoundedBorder(radius: 8),
-                        elevation: 8,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: bd.Badge(
-                            badgeContent: Text(
-                              '${arrivals.length}',
-                              style: myTextStyleTiny(context),
+                      const SizedBox(
+                        height: 12,
+                      ),
+                      SizedBox(
+                        width: type == 'phone' ? 280 : 360,
+                        child: Card(
+                          shape: getRoundedBorder(radius: 8),
+                          elevation: 4,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: bd.Badge(
+                              badgeContent: Text(
+                                '${passengerCounts.length}',
+                                style: myTextStyleTiny(context),
+                              ),
+                              badgeStyle: bd.BadgeStyle(
+                                elevation: 12,
+                                badgeColor: Colors.pink.shade800,
+                                padding: const EdgeInsets.all(8),
+                              ),
+                              child: TextButton(
+                                  onPressed: () {
+                                    // _generatePassengerCounts();
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      'Passenger Counts',
+                                      style: type == 'phone'
+                                          ? myTextStyleSmall(context)
+                                          : myTextStyleMedium(context),
+                                    ),
+                                  )),
                             ),
-                            badgeStyle: bd.BadgeStyle(
-                              elevation: 12,
-                              badgeColor: Colors.green.shade800,
-                              padding: const EdgeInsets.all(8),
-                            ),
-                            child: TextButton(
-                                onPressed: () {},
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Text(
-                                    'Accept Vehicle Arrivals',
-                                    style: type == 'phone'
-                                        ? myTextStyleSmall(context)
-                                        : myTextStyleMedium(context),
-                                  ),
-                                )),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(
+                        height: 12,
+                      ),
+                      SizedBox(
+                        width: type == 'phone' ? 280 : 360,
+                        child: Card(
+                          shape: getRoundedBorder(radius: 8),
+                          elevation: 8,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: bd.Badge(
+                              badgeContent: Text(
+                                '${requests.length}',
+                                style: myTextStyleTiny(context),
+                              ),
+                              badgeStyle: bd.BadgeStyle(
+                                elevation: 12,
+                                badgeColor: Colors.blue.shade800,
+                                padding: const EdgeInsets.all(8),
+                              ),
+                              child: TextButton(
+                                  onPressed: () {
+                                    _generateCommuterRequests();
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      'Commuter Requests',
+                                      style: type == 'phone'
+                                          ? myTextStyleSmall(context)
+                                          : myTextStyleMedium(context),
+                                    ),
+                                  )),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 12,
+                      ),
+                      SizedBox(
+                        width: type == 'phone' ? 280 : 360,
+                        child: Card(
+                          shape: getRoundedBorder(radius: 8),
+                          elevation: 4,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: bd.Badge(
+                              badgeContent: Text(
+                                '${arrivals.length}',
+                                style: myTextStyleTiny(context),
+                              ),
+                              badgeStyle: bd.BadgeStyle(
+                                elevation: 12,
+                                badgeColor: Colors.green.shade800,
+                                padding: const EdgeInsets.all(8),
+                              ),
+                              child: TextButton(
+                                  onPressed: () {},
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      'Vehicle Arrivals',
+                                      style: type == 'phone'
+                                          ? myTextStyleSmall(context)
+                                          : myTextStyleMedium(context),
+                                    ),
+                                  )),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: type == 'phone' ? 280 : 360,
+                        child: Card(
+                          shape: getRoundedBorder(radius: 8),
+                          elevation: 4,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: bd.Badge(
+                              badgeContent: Text(
+                                '${departures.length}',
+                                style: myTextStyleTiny(context),
+                              ),
+                              badgeStyle: bd.BadgeStyle(
+                                elevation: 12,
+                                badgeColor: Colors.indigo.shade800,
+                                padding: const EdgeInsets.all(8),
+                              ),
+                              child: TextButton(
+                                  onPressed: () {},
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      'Vehicle Departures',
+                                      style: type == 'phone'
+                                          ? myTextStyleSmall(context)
+                                          : myTextStyleMedium(context),
+                                    ),
+                                  )),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

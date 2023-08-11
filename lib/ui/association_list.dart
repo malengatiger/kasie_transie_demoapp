@@ -56,7 +56,7 @@ class AssociationListState extends State<AssociationList>
     try {
       await authService.registerDemoDriver();
       assocList = await listApiDog.getAssociations(refresh);
-      pp('$mm ...... associations found: ${assocList.length}');
+      pp('$mm ...... associations ... found: ${assocList.length}');
     } catch (e) {
       pp(e);
     }
@@ -76,6 +76,10 @@ class AssociationListState extends State<AssociationList>
         await navigateWithScale(DemoLanding(association: ass), context);
         setState(() {});
       }
+    } else {
+      setState(() {
+        association = ass;
+      });
     }
   }
 
@@ -237,7 +241,20 @@ class AssociationListState extends State<AssociationList>
                   SizedBox(
                       width: (width / 2) + 40,
                       child: association == null
-                          ? const SizedBox()
+                          ? Center(
+                              child: Card(
+                                shape: getRoundedBorder(radius: 16),
+                                elevation: 12,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Text(
+                                    'Waiting for Godot ...',
+                                    style: myTextStyleMediumLargeWithColor(context,
+                                        Theme.of(context).primaryColor, 32),
+                                  ),
+                                ),
+                              ),
+                            )
                           : DemoLanding(association: association!))
                 ],
               );

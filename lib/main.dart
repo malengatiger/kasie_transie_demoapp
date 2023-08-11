@@ -2,9 +2,14 @@ import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:firebase_core/firebase_core.dart' as fb;
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_analytics/observer.dart';
+
 import 'package:kasie_transie_demoapp/ui/association_list.dart';
 import 'package:kasie_transie_library/bloc/theme_bloc.dart';
+import 'package:kasie_transie_library/utils/base_initializer.dart';
 import 'package:kasie_transie_library/utils/emojis.dart';
+import 'package:kasie_transie_library/utils/error_handler.dart';
 import 'package:kasie_transie_library/utils/functions.dart';
 import 'package:kasie_transie_library/utils/prefs.dart';
 import 'package:kasie_transie_library/widgets/splash_page.dart';
@@ -32,6 +37,9 @@ Future<void> main() async {
     pp('$mx  this user has been initialized! ${E.leaf}: ${vehicle.toJson()}');
   }
 
+
+  baseInitializer.initialize();
+  errorHandler.sendErrors();
   runApp(const DemoDriverApp());
 }
 
@@ -62,6 +70,10 @@ class DemoDriverApp extends StatelessWidget {
                 theme: themeBloc.getTheme(themeIndex).lightTheme,
                 darkTheme: themeBloc.getTheme(themeIndex).darkTheme,
                 themeMode: ThemeMode.system,
+                navigatorObservers: [
+                  FirebaseAnalyticsObserver(
+                      analytics: FirebaseAnalytics.instance),
+                ],
                 home: AnimatedSplashScreen(
                   splash: const SplashWidget(),
                   animationDuration: const Duration(milliseconds: 2000),
@@ -75,6 +87,4 @@ class DemoDriverApp extends StatelessWidget {
           }),
     );
   }
-
 }
-
