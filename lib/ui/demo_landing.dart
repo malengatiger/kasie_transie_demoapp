@@ -173,24 +173,6 @@ class DemoLandingState extends State<DemoLanding>
     }
   }
 
-  void _generateHeartbeats() async {
-    pp('$mm ... _generateHeartbeats ');
-    setState(() {
-      busy = true;
-    });
-    try {
-      dataApiDog.generateHeartbeats(widget.association.associationId!, 30, 1);
-      pp('$mm ... _generateHeartbeats done: ${heartbeats.length}');
-      _showSuccess('Heartbeat generation sent to backend');
-    } catch (e) {
-      pp(e);
-      _showError(e);
-    }
-    setState(() {
-      busy = false;
-    });
-  }
-
   void _generatePassengerCounts() async {
     pp('$mm ... _generatePassengerCounts ');
     setState(() {
@@ -376,7 +358,7 @@ class DemoLandingState extends State<DemoLanding>
                             ),
                             child: TextButton(
                                 onPressed: () {
-                                  _generateHeartbeats();
+                                  // _generateHeartbeats();
                                 },
                                 child: Padding(
                                   padding: const EdgeInsets.all(16.0),
