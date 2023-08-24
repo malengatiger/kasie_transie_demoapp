@@ -6,13 +6,11 @@ import 'package:kasie_transie_library/bloc/data_api_dog.dart';
 import 'package:kasie_transie_library/bloc/list_api_dog.dart';
 import 'package:kasie_transie_library/data/generation_request.dart';
 import 'package:kasie_transie_library/data/schemas.dart' as lm;
-import 'package:kasie_transie_library/data/vehicle_list.dart';
 import 'package:kasie_transie_library/l10n/translation_handler.dart';
 import 'package:kasie_transie_library/utils/emojis.dart';
 import 'package:kasie_transie_library/utils/functions.dart';
 import 'package:kasie_transie_library/utils/navigator_utils.dart';
 import 'package:kasie_transie_library/utils/prefs.dart';
-import 'package:kasie_transie_library/widgets/drop_down_widgets.dart';
 import 'package:kasie_transie_library/widgets/vehicle_widgets/car_details.dart';
 
 import 'demo_cars.dart';
@@ -44,6 +42,8 @@ class VehicleListForDemoState extends State<VehicleListForDemo>
   void initState() {
     _controller = AnimationController(vsync: this);
     super.initState();
+    pp('$mm initState ....');
+
     _listen();
     _setTexts();
     _getVehicles();
@@ -192,10 +192,9 @@ class VehicleListForDemoState extends State<VehicleListForDemo>
     try {
       final gen =
           GenerationRequest(widget.route.routeId!, startDate, vehicleIds, 5);
-      await dataApiDog.generateRouteHeartbeats(gen);
       await dataApiDog.generateRouteDispatchRecords(gen);
       await dataApiDog.generateRouteCommuterRequests(
-          widget.route.routeId!, 500, 10);
+          widget.route.routeId!);
 
       _showGoodMessage();
     } catch (e) {
