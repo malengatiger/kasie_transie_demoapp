@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:badges/badges.dart' as bd;
 import 'package:flutter/material.dart';
+import 'package:kasie_transie_demoapp/util/demo_util.dart';
 import 'package:kasie_transie_library/bloc/data_api_dog.dart';
 import 'package:kasie_transie_library/bloc/list_api_dog.dart';
 import 'package:kasie_transie_library/data/generation_request.dart';
 import 'package:kasie_transie_library/data/schemas.dart' as lm;
+import 'package:kasie_transie_library/isolates/routes_isolate.dart';
 import 'package:kasie_transie_library/l10n/translation_handler.dart';
 import 'package:kasie_transie_library/utils/emojis.dart';
 import 'package:kasie_transie_library/utils/functions.dart';
@@ -116,7 +118,8 @@ class VehicleListForDemoState extends State<VehicleListForDemo>
     }
     carsToDisplay.clear();
 
-    pp('$mm ...  filtering cars that contain: $text from ${_carPlates.length} car plates');
+    pp('$mm ...  filtering cars that contain: $text from ${_carPlates
+        .length} car plates');
     for (var carPlate in _carPlates) {
       if (carPlate.toLowerCase().contains(text.toLowerCase())) {
         var car = _findVehicle(carPlate);
@@ -125,7 +128,8 @@ class VehicleListForDemoState extends State<VehicleListForDemo>
         }
       }
     }
-    pp('$mm .... set state with projectsToDisplay: ${carsToDisplay.length} ......');
+    pp('$mm .... set state with projectsToDisplay: ${carsToDisplay
+        .length} ......');
     setState(() {});
   }
 
@@ -135,7 +139,8 @@ class VehicleListForDemoState extends State<VehicleListForDemo>
         return car;
       }
     }
-    pp('$mm ..................................${E.redDot} ${E.redDot} DID NOT FIND $carPlate');
+    pp('$mm ..................................${E.redDot} ${E
+        .redDot} DID NOT FIND $carPlate');
 
     return null;
   }
@@ -170,7 +175,7 @@ class VehicleListForDemoState extends State<VehicleListForDemo>
           textStyle: myTextStyleMedium(context),
           backgroundColor: Colors.teal,
           message:
-              'Demo generation started OK. Watch the action on the other apps',
+          'Demo generation started OK. Watch the action on the other apps',
           context: context);
     }
   }
@@ -180,23 +185,12 @@ class VehicleListForDemoState extends State<VehicleListForDemo>
       busy = true;
     });
     pp('\n$mm ... start generation for list of cars: ${demoCars.length}..');
-    final startDate = DateTime.now()
-        .toUtc()
-        .subtract(const Duration(minutes: 30))
-        .toIso8601String();
-    final vehicleIds = <String>[];
-    for (var value in demoCars) {
-      vehicleIds.add(value.vehicleId!);
-    }
 
     try {
-      final gen =
-          GenerationRequest(widget.route.routeId!, startDate, vehicleIds, 5);
-      await dataApiDog.generateRouteDispatchRecords(gen);
-      await dataApiDog.generateRouteCommuterRequests(
-          widget.route.routeId!);
-
+      demoUtil.startDemo(route: widget.route, cars: demoCars);
       _showGoodMessage();
+      Navigator.of(context).pop();
+      Navigator.of(context).pop();
     } catch (e) {
       pp(e);
       _showError(e);
@@ -231,14 +225,19 @@ class VehicleListForDemoState extends State<VehicleListForDemo>
     if (cars.length > 20) {
       _showSearch = true;
     }
-    final height = MediaQuery.of(context).size.height;
+    final height = MediaQuery
+        .of(context)
+        .size
+        .height;
     return SafeArea(
         child: Scaffold(
             appBar: AppBar(
               title: Text(
                 'Monitor Vehicles',
                 style: myTextStyleMediumLargeWithColor(
-                    context, Theme.of(context).primaryColor, 24),
+                    context, Theme
+                    .of(context)
+                    .primaryColor, 24),
               ),
               bottom: PreferredSize(
                   preferredSize: Size.fromHeight(demoCars.isEmpty ? 160 : 220),
@@ -248,24 +247,27 @@ class VehicleListForDemoState extends State<VehicleListForDemo>
                       children: [
                         busy
                             ? const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  SizedBox(
-                                    height: 16,
-                                    width: 14,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      backgroundColor: Colors.pink,
-                                    ),
-                                  )
-                                ],
-                              )
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              height: 16,
+                              width: 14,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                backgroundColor: Colors.pink,
+                              ),
+                            )
+                          ],
+                        )
                             : gapW8,
                         busy ? gapH16 : gapH4,
-                        Text(
-                          '${widget.route.name}',
-                          style: myTextStyleMediumLargeWithColor(
-                              context, Colors.teal, 16),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Text(
+                            '${widget.route.name}',
+                            style: myTextStyleMediumLargeWithColor(
+                                context, Colors.teal, 16),
+                          ),
                         ),
                         gapH8,
                         Row(
@@ -282,7 +284,7 @@ class VehicleListForDemoState extends State<VehicleListForDemo>
                                   context, Colors.amber, 20),
                             ),
                             const SizedBox(
-                              width: 100,
+                              width: 128,
                             ),
                             IconButton(
                                 onPressed: () {
@@ -300,17 +302,17 @@ class VehicleListForDemoState extends State<VehicleListForDemo>
                         demoCars.isEmpty
                             ? gapW12
                             : SizedBox(
-                                width: 300,
-                                child: ElevatedButton.icon(
-                                    onPressed: () {
-                                      _startGeneratorForSelectedCars();
-                                    },
-                                    icon: const Icon(Icons.airport_shuttle),
-                                    label: const Padding(
-                                      padding: EdgeInsets.all(12.0),
-                                      child: Text('Start Demo Generation'),
-                                    )),
-                              ),
+                          width: 300, height: 60,
+                          child: ElevatedButton.icon(
+                              onPressed: () {
+                                _startGeneratorForSelectedCars();
+                              },
+                              icon: const Icon(Icons.airport_shuttle),
+                              label: const Padding(
+                                padding: EdgeInsets.all(12.0),
+                                child: Text('Start Demo Generation'),
+                              )),
+                        ),
                         SizedBox(
                           height: demoCars.isEmpty ? 24 : 36,
                         ),
@@ -337,99 +339,101 @@ class VehicleListForDemoState extends State<VehicleListForDemo>
                             ),
                             cars.isEmpty
                                 ? Center(
-                                    child: SizedBox(
-                                      height: 120,
-                                      child: Column(
-                                        children: [
-                                          Text(
-                                            'No cars found',
-                                            style:
-                                                myTextStyleMediumLargeWithColor(
-                                                    context,
-                                                    Theme.of(context)
-                                                        .primaryColorLight,
-                                                    24),
-                                          ),
-                                          const SizedBox(
-                                            height: 32,
-                                          ),
-                                        ],
-                                      ),
+                              child: SizedBox(
+                                height: 120,
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      'No cars found',
+                                      style:
+                                      myTextStyleMediumLargeWithColor(
+                                          context,
+                                          Theme
+                                              .of(context)
+                                              .primaryColorLight,
+                                          24),
                                     ),
-                                  )
+                                    const SizedBox(
+                                      height: 32,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
                                 : Expanded(
-                                    child: bd.Badge(
-                                      badgeContent: Text(
-                                        '${cars.length}',
-                                        style: myTextStyleTiny(context),
-                                      ),
-                                      position: bd.BadgePosition.topEnd(
-                                          top: 12, end: 12),
-                                      badgeStyle: bd.BadgeStyle(
-                                          badgeColor: Colors.green[900]!,
-                                          padding: const EdgeInsets.all(8)),
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(16.0),
-                                        child: GridView.builder(
-                                            gridDelegate:
-                                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                                    crossAxisCount: 3),
-                                            itemCount: carsToDisplay.length,
-                                            itemBuilder: (ctx, index) {
-                                              final car = carsToDisplay
-                                                  .elementAt(index);
-                                              var color = Colors.white;
-                                              var found = false;
-                                              for (var value in demoCars) {
-                                                if (car.vehicleId ==
-                                                    value.vehicleId) {
-                                                  color = Colors.green;
-                                                  found = true;
-                                                }
-                                              }
-                                              return GestureDetector(
-                                                onTap: () {
-                                                  _addToCars(car);
-                                                  setState(() {});
-                                                },
-                                                child: Card(
-                                                  shape: getRoundedBorder(
-                                                      radius: 16),
-                                                  elevation: 12,
-                                                  child: Center(
-                                                    child: Column(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .center,
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .center,
-                                                      children: [
-                                                        Icon(
-                                                          Icons.airport_shuttle,
-                                                          color: color,
-                                                        ),
-                                                        gapH8,
-                                                        Text(
-                                                          '${car.vehicleReg}',
-                                                          style: myTextStyleMediumLargeWithColor(
-                                                              context,
-                                                              found
-                                                                  ? color
-                                                                  : Theme.of(
-                                                                          context)
-                                                                      .primaryColor,
-                                                              14),
-                                                        ),
-                                                      ],
-                                                    ),
+                              child: bd.Badge(
+                                badgeContent: Text(
+                                  '${cars.length}',
+                                  style: myTextStyleTiny(context),
+                                ),
+                                position: bd.BadgePosition.topEnd(
+                                    top: 12, end: 12),
+                                badgeStyle: bd.BadgeStyle(
+                                    badgeColor: Colors.green[900]!,
+                                    padding: const EdgeInsets.all(8)),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: GridView.builder(
+                                      gridDelegate:
+                                      const SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: 3),
+                                      itemCount: carsToDisplay.length,
+                                      itemBuilder: (ctx, index) {
+                                        final car = carsToDisplay
+                                            .elementAt(index);
+                                        var color = Colors.white;
+                                        var found = false;
+                                        for (var value in demoCars) {
+                                          if (car.vehicleId ==
+                                              value.vehicleId) {
+                                            color = Colors.green;
+                                            found = true;
+                                          }
+                                        }
+                                        return GestureDetector(
+                                          onTap: () {
+                                            _addToCars(car);
+                                            setState(() {});
+                                          },
+                                          child: Card(
+                                            shape: getRoundedBorder(
+                                                radius: 16),
+                                            elevation: 12,
+                                            child: Center(
+                                              child: Column(
+                                                mainAxisAlignment:
+                                                MainAxisAlignment
+                                                    .center,
+                                                crossAxisAlignment:
+                                                CrossAxisAlignment
+                                                    .center,
+                                                children: [
+                                                  Icon(
+                                                    Icons.airport_shuttle,
+                                                    color: color,
                                                   ),
-                                                ),
-                                              );
-                                            }),
-                                      ),
-                                    ),
-                                  )
+                                                  gapH8,
+                                                  Text(
+                                                    '${car.vehicleReg}',
+                                                    style: myTextStyleMediumLargeWithColor(
+                                                        context,
+                                                        found
+                                                            ? color
+                                                            : Theme
+                                                            .of(
+                                                            context)
+                                                            .primaryColor,
+                                                        14),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      }),
+                                ),
+                              ),
+                            )
                           ],
                         ),
                       ),
@@ -438,75 +442,79 @@ class VehicleListForDemoState extends State<VehicleListForDemo>
                 ),
                 showCarDetails
                     ? Positioned(
-                        top: -48,
-                        bottom: 0,
-                        child: CarDetails(
-                          vehicle: car!,
-                          onClose: () {
-                            setState(() {
-                              showCarDetails = false;
-                              if (cars.length > 19) {
-                                _showSearch = true;
-                              }
-                            });
-                          },
-                        ))
+                    top: -48,
+                    bottom: 0,
+                    child: CarDetails(
+                      vehicle: car!,
+                      onClose: () {
+                        setState(() {
+                          showCarDetails = false;
+                          if (cars.length > 19) {
+                            _showSearch = true;
+                          }
+                        });
+                      },
+                    ))
                     : const SizedBox(),
                 _showSearch
                     ? Positioned(
-                        top: 0,
-                        child: SizedBox(
-                          height: 100,
-                          child: Row(
-                            children: [
-                              SizedBox(
-                                width: 300,
-                                child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 20.0, horizontal: 12.0),
-                                    child: TextField(
-                                      controller: _textEditingController,
-                                      onChanged: (text) {
-                                        pp(' ........... changing to: $text');
-                                        _runFilter(text);
-                                      },
-                                      decoration: InputDecoration(
-                                          label: Text(
-                                            search == null ? 'Search' : search!,
-                                            style: myTextStyleSmall(
-                                              context,
-                                            ),
-                                          ),
-                                          icon: Icon(
-                                            Icons.search,
-                                            color:
-                                                Theme.of(context).primaryColor,
-                                          ),
-                                          border: const OutlineInputBorder(),
-                                          hintText: searchVehicles == null
-                                              ? 'Search Vehicles'
-                                              : searchVehicles!,
-                                          hintStyle: myTextStyleSmallWithColor(
-                                              context,
-                                              Theme.of(context).primaryColor)),
-                                    )),
-                              ),
-                              const SizedBox(
-                                width: 0,
-                              ),
-                              bd.Badge(
-                                position: bd.BadgePosition.topEnd(),
-                                badgeContent: Padding(
-                                  padding: const EdgeInsets.all(4.0),
-                                  child: Text('${carsToDisplay.length}',
-                                      style: myTextStyleTiny(
-                                        context,
-                                      )),
-                                ),
-                              )
-                            ],
+                    top: 0,
+                    child: SizedBox(
+                      height: 100,
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 300,
+                            child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 20.0, horizontal: 12.0),
+                                child: TextField(
+                                  controller: _textEditingController,
+                                  onChanged: (text) {
+                                    pp(' ........... changing to: $text');
+                                    _runFilter(text);
+                                  },
+                                  decoration: InputDecoration(
+                                      label: Text(
+                                        search == null ? 'Search' : search!,
+                                        style: myTextStyleSmall(
+                                          context,
+                                        ),
+                                      ),
+                                      icon: Icon(
+                                        Icons.search,
+                                        color:
+                                        Theme
+                                            .of(context)
+                                            .primaryColor,
+                                      ),
+                                      border: const OutlineInputBorder(),
+                                      hintText: searchVehicles == null
+                                          ? 'Search Vehicles'
+                                          : searchVehicles!,
+                                      hintStyle: myTextStyleSmallWithColor(
+                                          context,
+                                          Theme
+                                              .of(context)
+                                              .primaryColor)),
+                                )),
                           ),
-                        ))
+                          const SizedBox(
+                            width: 0,
+                          ),
+                          bd.Badge(
+                            position: bd.BadgePosition.topEnd(),
+                            badgeContent: Padding(
+                              padding: const EdgeInsets.all(4.0),
+                              child: Text('${carsToDisplay.length}',
+                                  style: myTextStyleTiny(
+                                    context,
+                                  )),
+                            ),
+                          )
+                        ],
+                      ),
+                    ))
                     : const SizedBox()
               ],
             )));

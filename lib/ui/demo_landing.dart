@@ -6,15 +6,11 @@ import 'package:kasie_transie_demoapp/ui/vehicle_list.dart';
 import 'package:kasie_transie_library/bloc/data_api_dog.dart';
 import 'package:kasie_transie_library/bloc/list_api_dog.dart';
 import 'package:kasie_transie_library/data/schemas.dart' as lib;
-import 'package:kasie_transie_library/isolates/routes_isolate.dart';
-import 'package:kasie_transie_library/maps/association_route_maps.dart';
 import 'package:kasie_transie_library/maps/cluster_maps/cluster_map_controller.dart';
 import 'package:kasie_transie_library/messaging/fcm_bloc.dart';
-import 'package:kasie_transie_library/providers/kasie_providers.dart';
 import 'package:kasie_transie_library/utils/emojis.dart';
 import 'package:kasie_transie_library/utils/functions.dart';
 import 'package:kasie_transie_library/utils/navigator_utils.dart';
-import 'package:kasie_transie_library/utils/zip_handler.dart';
 import 'package:kasie_transie_library/widgets/language_and_color_chooser.dart';
 import 'package:kasie_transie_library/widgets/route_list_minimum.dart';
 import 'package:kasie_transie_library/widgets/route_widgets/route_manager.dart';
@@ -131,15 +127,11 @@ class DemoLandingState extends State<DemoLanding>
     setState(() {
       busy = true;
     });
-    if (refresh) {
-      final bags = await zipHandler.getRouteBags(associationId: widget.association.associationId!);
-      routes.clear();
-      for (var value in bags!.routeBags) {
-        routes.add(value.route!);
-}
-    } else {
+    try {
       routes = await listApiDog.getRoutes(
-          AssociationParameter(widget.association.associationId!, refresh));
+                widget.association.associationId!, refresh);
+    } catch (e, s) {
+      pp('$mm $e $s');
     }
     pp('$mm ... routes found: ${routes.length}');
 
@@ -341,7 +333,9 @@ class DemoLandingState extends State<DemoLanding>
                       ElevatedButton(
                           onPressed: () {
                             pp('................... button pressed');
-                            navigateWithScale(RouteListMinimum(onRoutePicked: (route){
+                            navigateWithScale(RouteListMinimum(
+                              isMappable: true,
+                              onRoutePicked: (route){
                               _navigateToVehicles(route);
                             }, association: widget.association,), context);
                           },
@@ -408,16 +402,20 @@ class Displays extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final type = getThisDeviceType();
+    const widthPhone = 280.0;
+    const widthTablet = 360.0;
+    final bPos = bd.BadgePosition.topEnd(top: -12, end: -20);
     return SizedBox(
       height: 600,
       child: ListView(
         children: [
           SizedBox(
-            width: type == 'phone' ? 280 : 360,
+            width: type == 'phone' ? widthPhone : widthTablet,
             child: Card(
               shape: getRoundedBorder(radius: 8),
               elevation: 8,
               child: bd.Badge(
+                position: bPos,
                 badgeContent: Text(
                   '$dispatches',
                   style: myTextStyleTiny(context),
@@ -447,11 +445,12 @@ class Displays extends StatelessWidget {
             height: 4,
           ),
           SizedBox(
-            width: type == 'phone' ? 280 : 360,
+            width: type == 'phone' ? widthPhone : widthTablet,
             child: Card(
               shape: getRoundedBorder(radius: 8),
               elevation: 8,
               child: bd.Badge(
+                position: bPos,
                 badgeContent: Text(
                   '$heartbeats',
                   style: myTextStyleTiny(context),
@@ -477,13 +476,14 @@ class Displays extends StatelessWidget {
             height: 4,
           ),
           SizedBox(
-            width: type == 'phone' ? 280 : 360,
+            width: type == 'phone' ? widthPhone : widthTablet,
             child: Card(
               shape: getRoundedBorder(radius: 8),
               elevation: 8,
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: bd.Badge(
+                  position: bPos,
                   badgeContent: Text(
                     '$passengerCounts',
                     style: myTextStyleTiny(context),
@@ -510,13 +510,14 @@ class Displays extends StatelessWidget {
             height: 4,
           ),
           SizedBox(
-            width: type == 'phone' ? 280 : 360,
+            width: type == 'phone' ? widthPhone : widthTablet,
             child: Card(
               shape: getRoundedBorder(radius: 8),
               elevation: 8,
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: bd.Badge(
+                  position: bPos,
                   badgeContent: Text(
                     '$requests',
                     style: myTextStyleTiny(context),
@@ -543,13 +544,14 @@ class Displays extends StatelessWidget {
             height: 4,
           ),
           SizedBox(
-            width: type == 'phone' ? 280 : 360,
+            width: type == 'phone' ? widthPhone : widthTablet,
             child: Card(
               shape: getRoundedBorder(radius: 8),
               elevation: 8,
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: bd.Badge(
+                  position: bPos,
                   badgeContent: Text(
                     '$arrivals',
                     style: myTextStyleTiny(context),
@@ -572,22 +574,24 @@ class Displays extends StatelessWidget {
               ),
             ),
           ),
+          gapH4,
           SizedBox(
-            width: type == 'phone' ? 280 : 360,
+            width: type == 'phone' ? widthPhone : widthTablet,
             child: Card(
               shape: getRoundedBorder(radius: 8),
               elevation: 8,
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: bd.Badge(
+                  position: bPos,
                   badgeContent: Text(
                     '$departures',
                     style: myTextStyleTiny(context),
                   ),
-                  badgeStyle: bd.BadgeStyle(
+                  badgeStyle: const bd.BadgeStyle(
                     elevation: 12,
-                    badgeColor: Colors.indigo.shade800,
-                    padding: const EdgeInsets.all(8),
+                    badgeColor: Colors.black,
+                    padding: EdgeInsets.all(8),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
