@@ -32,10 +32,12 @@ class DemoUtil {
         'Isolates; car: ${E.redDot} ${vehicle.vehicleReg} '
         'on route: ${route.name}  🔵🔵🔵🔵🔵🔵🔵🔵🔵\n\n\n');
 
-    // _heavyTaskForPassengerCounts(route: route, vehicle: vehicle, points: points, marks: marks);
     _heavyTaskForActivity(
         route: route, vehicle: vehicle, points: points, marks: marks);
-    await _heavyTaskForHeartbeats(vehicle: vehicle, points: points, marks: marks);
+
+    _heavyTaskForHeartbeats(vehicle: vehicle, points: points, marks: marks);
+
+    _heavyForCommuters(route: route, marks: marks);
   }
 
   Future _heavyForCommuters({
